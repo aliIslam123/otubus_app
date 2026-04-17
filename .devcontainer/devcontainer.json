@@ -1,0 +1,17 @@
+{
+  "name": "Flutter Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y curl unzip xz-utils zip libglu1-mesa && git clone https://github.com/flutter/flutter.git -b stable --depth 1 $HOME/flutter && echo 'export PATH=\"$PATH:$HOME/flutter/bin\"' >> ~/.bashrc && $HOME/flutter/bin/flutter doctor",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Dart-Code.dart-code",
+        "Dart-Code.flutter"
+      ]
+    }
+  }
+}
