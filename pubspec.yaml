@@ -23,6 +23,15 @@ dependencies:
   # QR Code Generator
   qr_flutter: ^4.1.0
 
+  # QR Code Scanner
+  mobile_scanner: ^4.0.0
+
+  # Persistent Storage (Theme & User Preferences)
+  shared_preferences: ^2.2.0
+
+  # Runtime Permissions
+  permission_handler: ^11.0.0
+
   # Location + Maps
   location: ^6.0.0
   google_maps_flutter: ^2.6.1
@@ -47,14 +56,23 @@ dependencies:
   # Screenshot
   screenshot: ^3.0.0
 
+  # Barcode Scanner
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
 
+  flutter_launcher_icons: ^0.13.1
+
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"

@@ -1,5 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:otubus_app/features/booking/screens/seat_selection_screen.dart';
+import 'package:otubus_app/features/notifications/screens/notifications_screen.dart'
+    as otubus_notifications;
 
 void main() => runApp(const MyApp());
 
@@ -71,9 +73,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: _Fab(isDark: isDark),
-      bottomNavigationBar: _BottomBar(isDark: isDark),
     );
   }
 }
@@ -95,7 +94,15 @@ class _Header extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: isDark ? dGold : lGold, width: 2),
             ),
-            child: const CircleAvatar(radius: 20),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: isDark ? dNavy : lBg,
+              child: Icon(
+                Icons.person,
+                color: isDark ? Colors.white70 : lNavy,
+                size: 24,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -107,7 +114,7 @@ class _Header extends StatelessWidget {
                   style: TextStyle(color: isDark ? dCool : lSlate),
                 ),
                 Text(
-                  'Hello,Ali',
+                  'Hello, Student',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -117,15 +124,28 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark ? Colors.white10 : Colors.black12,
-            ),
-            padding: const EdgeInsets.all(10),
-            child: Icon(
-              Icons.notifications_none,
-              color: isDark ? Colors.white : lNavy,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => otubus_notifications.NotificationsScreen(
+                    isDark: isDark,
+                    onToggle: () {},
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDark ? Colors.white10 : Colors.black12,
+              ),
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                Icons.notifications_none,
+                color: isDark ? Colors.white : lNavy,
+              ),
             ),
           ),
         ],
@@ -263,7 +283,7 @@ class _AvailableHeader extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           Text(
-            '14 Routes Found',
+            '3 Routes Found',
             style: TextStyle(color: isDark ? dCool : lSlate),
           ),
         ],
@@ -283,9 +303,35 @@ class _BusList extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          _BusCard(isDark: isDark, premium: true),
-          _BusCard(isDark: isDark),
-          _BusCard(isDark: isDark, disabled: true),
+          _BusCard(
+            isDark: isDark,
+            premium: true,
+            time1: '07:30 AM',
+            station1: 'Downtown Station',
+            time2: '08:45 AM',
+            station2: 'OTU Main Gate',
+            duration: '1h 15m',
+            seatsLeft: 12,
+          ),
+          _BusCard(
+            isDark: isDark,
+            time1: '08:00 AM',
+            station1: 'Zayed City',
+            time2: '09:00 AM',
+            station2: 'OTU Main Gate',
+            duration: '1h 00m',
+            seatsLeft: 25,
+          ),
+          _BusCard(
+            isDark: isDark,
+            disabled: true,
+            time1: '07:00 AM',
+            station1: 'Haram Station',
+            time2: '08:30 AM',
+            station2: 'OTU Main Gate',
+            duration: '1h 30m',
+            seatsLeft: 0,
+          ),
         ],
       ),
     );
@@ -296,11 +342,23 @@ class _BusCard extends StatelessWidget {
   final bool isDark;
   final bool premium;
   final bool disabled;
+  final String time1;
+  final String station1;
+  final String time2;
+  final String station2;
+  final String duration;
+  final int seatsLeft;
 
   const _BusCard({
     required this.isDark,
     this.premium = false,
     this.disabled = false,
+    required this.time1,
+    required this.station1,
+    required this.time2,
+    required this.station2,
+    required this.duration,
+    required this.seatsLeft,
   });
 
   @override
@@ -361,14 +419,14 @@ class _BusCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('07:30 AM'),
+                  children: [
+                    Text(time1),
                     SizedBox(height: 4),
-                    Text('Downtown Station'),
+                    Text(station1),
                     SizedBox(height: 10),
-                    Text('08:45 AM'),
+                    Text(time2),
                     SizedBox(height: 4),
-                    Text('OTU Main Gate'),
+                    Text(station2),
                   ],
                 ),
               ),
@@ -384,7 +442,7 @@ class _BusCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.access_time, size: 16),
                   const SizedBox(width: 6),
-                  const Text('1h 15m'),
+                  Text(duration),
                   const SizedBox(width: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -393,14 +451,14 @@ class _BusCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: disabled
-                          ? Colors.grey.withOpacity(0.2)
+                          ? Colors.grey.withValues(alpha: 0.2)
                           : (isDark
-                                ? dGreen.withOpacity(0.2)
-                                : lGreen.withOpacity(0.2)),
+                                ? dGreen.withValues(alpha: 0.2)
+                                : lGreen.withValues(alpha: 0.2)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      disabled ? 'Fully Booked' : '12 seats left',
+                      disabled ? 'Fully Booked' : '$seatsLeft seats left',
                       style: TextStyle(
                         color: disabled
                             ? Colors.grey
@@ -419,70 +477,54 @@ class _BusCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                onPressed: disabled ? null : () {},
-                child: Text(disabled ? 'Sold Out' : 'Book Now'),
+                onPressed: disabled
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const SelectSeatScreen(
+                                      baseTicketPrice: 15.0,
+                                    ),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  return SlideTransition(
+                                    position: animation.drive(
+                                      Tween(
+                                        begin: const Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).chain(
+                                        CurveTween(curve: Curves.easeInOut),
+                                      ),
+                                    ),
+                                    child: child,
+                                  );
+                                },
+                            transitionDuration: const Duration(
+                              milliseconds: 400,
+                            ),
+                          ),
+                        );
+                      },
+                child: Text(
+                  disabled ? 'Sold Out' : 'Book Now',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-// ================= FAB =================
-class _Fab extends StatelessWidget {
-  final bool isDark;
-  const _Fab({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      backgroundColor: isDark ? dNavy : lNavy,
-      onPressed: () {},
-      child: const Icon(Icons.add_circle_outline, size: 28),
-    );
-  }
-}
-
-// ================= BOTTOM =================
-class _BottomBar extends StatelessWidget {
-  final bool isDark;
-  const _BottomBar({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      child: SizedBox(
-        height: 65,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem(Icons.home, 'Home', true, isDark),
-            _navItem(Icons.confirmation_num, 'Tickets', false, isDark),
-            const SizedBox(width: 40),
-            _navItem(Icons.account_balance_wallet, 'Wallet', false, isDark),
-            _navItem(Icons.person, 'Profile', false, isDark),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool active, bool isDark) {
-    final color = active
-        ? (isDark ? Colors.white : lNavy)
-        : (isDark ? dCool : lSlate);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: color)),
-      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:otubus_app/main_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -73,7 +74,16 @@ class NotificationsScreen extends StatelessWidget {
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         elevation: 0,
-        leading: Icon(Icons.arrow_back_ios, color: textColor, size: 20),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: textColor, size: 20),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 0)),
+              (route) => false,
+            );
+          },
+        ),
         title: Text(
           "Notifications",
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
@@ -149,30 +159,58 @@ class NotificationsScreen extends StatelessWidget {
         ],
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: scaffoldBg,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: primaryBlue,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: "Home",
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: scaffoldBg,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? Colors.white10 : Colors.grey.shade200,
+              width: 1,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.confirmation_num_outlined),
-            label: "Bookings",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "Alerts",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: "Profile",
-          ),
-        ],
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: scaffoldBg,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: isDark ? Colors.white60 : Colors.black54,
+          unselectedItemColor: isDark ? Colors.white60 : Colors.black54,
+          currentIndex: 0,
+          onTap: (index) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => MainScreen(initialIndex: index)),
+              (route) => false,
+            );
+          },
+          showUnselectedLabels: true,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: "Home",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search),
+              label: "Routes",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.qr_code_scanner_outlined),
+              activeIcon: Icon(Icons.qr_code_scanner),
+              label: "Scan",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.confirmation_num_outlined),
+              activeIcon: Icon(Icons.confirmation_num),
+              label: "Tickets",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: "Profile",
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -12,9 +12,9 @@ class SearchResultsScreen extends StatefulWidget {
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
   String _selectedFilter = 'Time'; // الفلتر النشط
 
-  // متغيرات لحفظ اختيارات اليوزر من الفلاتر
-  String? _selectedArea;
-  String? _selectedDuration;
+  String? _selectedTime;
+  String? _selectedPrice;
+  String? _selectedAvailability;
 
   final List<Map<String, dynamic>> trips = [
     {
@@ -80,17 +80,53 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               child: ListView.builder(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                itemCount: trips.length,
+                itemCount: _getFilteredTrips().length,
                 itemBuilder: (context, index) {
-                  return _buildTripCard(context, trips[index], theme, isDark);
+                  return _buildTripCard(context, _getFilteredTrips()[index], theme, isDark);
                 },
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(theme, isDark),
     );
+  }
+
+  List<Map<String, dynamic>> _getFilteredTrips() {
+    List<Map<String, dynamic>> result = List.from(trips);
+
+    if (_selectedTime != null && _selectedTime != 'All Times') {
+      if (_selectedTime == 'Morning (6am-12pm)') {
+        result = result.where((t) => _getHour(t['departureTime']) >= 6 && _getHour(t['departureTime']) < 12).toList();
+      } else if (_selectedTime == 'Night (12am-6am)') {
+        result = result.where((t) => _getHour(t['departureTime']) >= 0 && _getHour(t['departureTime']) < 6).toList();
+      }
+    }
+
+    if (_selectedPrice == 'Low to High') {
+      result.sort((a, b) => _extractPrice(a['price']).compareTo(_extractPrice(b['price'])));
+    } else if (_selectedPrice == 'High to Low') {
+      result.sort((a, b) => _extractPrice(b['price']).compareTo(_extractPrice(a['price'])));
+    }
+
+    if (_selectedAvailability == 'Available Only') {
+      result = result.where((t) {
+        if (t['seatsLeft'] != null) {
+          return !t['seatsLeft'].toString().contains('0 ');
+        }
+        return true;
+      }).toList();
+    }
+
+    return result;
+  }
+
+  int _getHour(String time) {
+    return int.tryParse(time.split(':')[0]) ?? 0;
+  }
+
+  double _extractPrice(String price) {
+    return double.tryParse(price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
   }
 
   Widget _buildCustomAppBar(BuildContext context, ThemeData theme, bool isDark) {
@@ -139,11 +175,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: Row(
         children: [
-          _buildFilterChip('Time', 'Time', true, theme, isDark),
+          _buildFilterChip('Time', _selectedTime ?? 'Time', true, theme, isDark),
           const SizedBox(width: 10),
-          _buildFilterChip('Area', _selectedArea ?? 'Area', true, theme, isDark),
+          _buildFilterChip('Price', _selectedPrice ?? 'Price', true, theme, isDark),
           const SizedBox(width: 10),
-          _buildFilterChip('Duration', _selectedDuration ?? 'Duration', true, theme, isDark),
+          _buildFilterChip('Availability', _selectedAvailability ?? 'Availability', true, theme, isDark),
         ],
       ),
     );
@@ -154,10 +190,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
     return GestureDetector(
       onTap: () {
-        if (filterType == 'Area') {
-          _showAreaBottomSheet(theme, isDark);
-        } else if (filterType == 'Duration') {
-          _showDurationBottomSheet(theme, isDark);
+        if (filterType == 'Time') {
+          _showTimeBottomSheet(theme, isDark);
+        } else if (filterType == 'Price') {
+          _showPriceBottomSheet(theme, isDark);
+        } else if (filterType == 'Availability') {
+          _showAvailabilityBottomSheet(theme, isDark);
         } else {
           setState(() => _selectedFilter = filterType);
         }
@@ -174,14 +212,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           children: [
             if (isSelected) const Icon(Icons.check, color: Colors.white, size: 16),
             if (isSelected) const SizedBox(width: 4),
-            if (filterType == 'Area' && !isSelected) const Icon(Icons.location_on_outlined, color: Colors.grey, size: 16),
-            if (filterType == 'Area' && !isSelected) const SizedBox(width: 4),
-            if (filterType == 'Duration' && !isSelected) const Icon(Icons.timer_outlined, color: Colors.grey, size: 16),
-            if (filterType == 'Area' && !isSelected) const SizedBox(width: 4),
-            if (filterType == 'Duration' && !isSelected) const Icon(Icons.timer_outlined, color: Colors.grey, size: 16),
-            if (filterType == 'Duration' && !isSelected) const SizedBox(width: 4),
             if (filterType == 'Time' && !isSelected) const Icon(Icons.access_time, color: Colors.grey, size: 16),
             if (filterType == 'Time' && !isSelected) const SizedBox(width: 4),
+            if (filterType == 'Price' && !isSelected) const Icon(Icons.attach_money, color: Colors.grey, size: 16),
+            if (filterType == 'Price' && !isSelected) const SizedBox(width: 4),
+            if (filterType == 'Availability' && !isSelected) const Icon(Icons.event_seat, color: Colors.grey, size: 16),
+            if (filterType == 'Availability' && !isSelected) const SizedBox(width: 4),
             Text(
               displayLabel,
               style: TextStyle(
@@ -201,18 +237,17 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   // --- Bottom Sheets للخيارات ---
 
-  void _showAreaBottomSheet(ThemeData theme, bool isDark) {
-    final List<String> areas = ['All Areas', 'Hyper One', 'Arkan Mall', 'Zayed Plaza', 'Downtown'];
-
+  void _showTimeBottomSheet(ThemeData theme, bool isDark) {
+    final List<String> options = ['All Times', 'Morning (6am-12pm)', 'Night (12am-6am)'];
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
-        return _buildBottomSheetContent('Select Boarding Area', areas, _selectedArea, theme, isDark, (selected) {
+        return _buildBottomSheetContent('Select Time', options, _selectedTime, theme, isDark, (selected) {
           setState(() {
-            _selectedArea = selected == 'All Areas' ? null : selected;
-            _selectedFilter = 'Area';
+            _selectedTime = selected == 'All Times' ? null : selected;
+            _selectedFilter = 'Time';
           });
           Navigator.pop(context);
         });
@@ -220,18 +255,35 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  void _showDurationBottomSheet(ThemeData theme, bool isDark) {
-    final List<String> durations = ['Any Duration', 'Less than 30 mins', '30 - 60 mins', 'More than 1 hour'];
-
+  void _showPriceBottomSheet(ThemeData theme, bool isDark) {
+    final List<String> options = ['Any Price', 'Low to High', 'High to Low'];
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
-        return _buildBottomSheetContent('Select Max Duration', durations, _selectedDuration, theme, isDark, (selected) {
+        return _buildBottomSheetContent('Select Price Order', options, _selectedPrice, theme, isDark, (selected) {
           setState(() {
-            _selectedDuration = selected == 'Any Duration' ? null : selected;
-            _selectedFilter = 'Duration';
+            _selectedPrice = selected == 'Any Price' ? null : selected;
+            _selectedFilter = 'Price';
+          });
+          Navigator.pop(context);
+        });
+      },
+    );
+  }
+
+  void _showAvailabilityBottomSheet(ThemeData theme, bool isDark) {
+    final List<String> options = ['Any', 'Available Only'];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) {
+        return _buildBottomSheetContent('Select Availability', options, _selectedAvailability, theme, isDark, (selected) {
+          setState(() {
+            _selectedAvailability = selected == 'Any' ? null : selected;
+            _selectedFilter = 'Availability';
           });
           Navigator.pop(context);
         });
@@ -275,7 +327,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('12 AVAILABLE COACHES', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text('${_getFilteredTrips().length} AVAILABLE COACHES', style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -535,21 +587,4 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  Widget _buildBottomNavigationBar(ThemeData theme, bool isDark) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: theme.colorScheme.surface,
-      selectedItemColor: isDark ? Colors.white : const Color(0xFF0A0A5A),
-      unselectedItemColor: Colors.grey.shade500,
-      currentIndex: 1,
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'HOME'),
-        BottomNavigationBarItem(icon: Icon(Icons.directions_bus), label: 'SEARCH'),
-        BottomNavigationBarItem(icon: Icon(Icons.confirmation_num_outlined), label: 'BOOKINGS'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'PROFILE'),
-      ],
-    );
-  }
 }

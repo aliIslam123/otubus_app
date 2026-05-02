@@ -1,52 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-void main() {
-  runApp(const BusTicketApp());
-}
+import 'dart:io';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../tracking/screens/bus_tracking_screen.dart';
 
-class AppColors {
-  static const Color primaryBlue = Color(0xFF343399);
-  static const Color primaryDarkBlue = Color(0xFF18178C);
-  static const Color accentGold = Color(0xFFD1AE36);
-  static const Color mainBackground = Color(0xFF0E101F);
-  static const Color cardBackground = Color(0xFF191A2C);
-  static const Color circleButton = Color(0xFF1E293D);
-  static const Color darkNav = Color(0xFF1C1C1E);
-  static const Color purpleAccent = Color(0xFF7374C4);
-  static const Color greenAccent = Color(0xFF3D6C5C);
-  static const Color lightBackground = Color(0xFFF5F5F5);
-  static const Color lightCard = Colors.white;
-}
 
-class BusTicketApp extends StatelessWidget {
-  const BusTicketApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'OTUBUS Premium',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primaryColor: AppColors.primaryBlue,
-        scaffoldBackgroundColor: AppColors.lightBackground,
-        fontFamily: 'Inter',
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: AppColors.primaryBlue,
-        scaffoldBackgroundColor: AppColors.mainBackground,
-        fontFamily: 'Inter',
-      ),
-      themeMode: ThemeMode.system,
-      home: const DigitalTicketScreen(),
-    );
-  }
-}
-
-class DigitalTicketScreen extends StatelessWidget {
-  const DigitalTicketScreen({super.key});
+class TicketViewScreen extends StatelessWidget {
+  const TicketViewScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +30,7 @@ class DigitalTicketScreen extends StatelessWidget {
                   children: [
                     _buildTicketCard(isDark),
                     const SizedBox(height: 20),
-                    _buildActionButtons(isDark),
+                    _buildActionButtons(context, isDark),
                     const SizedBox(height: 24),
                     _buildInstructions(isDark),
                     const SizedBox(height: 20),
@@ -74,7 +38,6 @@ class DigitalTicketScreen extends StatelessWidget {
                 ),
               ),
             ),
-            _buildBottomNav(isDark),
           ],
         ),
       ),
@@ -156,7 +119,7 @@ class DigitalTicketScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -313,8 +276,8 @@ class DigitalTicketScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Divider(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
                   height: 1,
                 ),
                 const SizedBox(height: 20),
@@ -377,8 +340,8 @@ class DigitalTicketScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Divider(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
                   height: 1,
                 ),
                 const SizedBox(height: 24),
@@ -390,7 +353,7 @@ class DigitalTicketScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -415,7 +378,7 @@ class DigitalTicketScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -459,8 +422,8 @@ class DigitalTicketScreen extends StatelessWidget {
                   size: const Size(double.infinity, 1),
                   painter: DashedLinePainter(
                     color: isDark
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.1),
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.1),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -615,82 +578,131 @@ class DigitalTicketScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(bool isDark) {
+  Widget _buildActionButtons(BuildContext context, bool isDark) {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkNav : Colors.black,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.15)
-                  : Colors.transparent,
-              width: 1,
+        GestureDetector(
+          onTap: () => _generateAndDownloadPdf(context),
+          child: Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkNav : Colors.black,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.transparent,
+                width: 1,
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.wallet,
-                color: isDark ? Colors.white.withOpacity(0.9) : Colors.white,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Add to Apple Wallet',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.download,
                   color: isDark ? Colors.white.withOpacity(0.9) : Colors.white,
+                  size: 22,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Text(
+                  'Download Ticket (PDF)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white.withOpacity(0.9) : Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.cardBackground : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.15)
-                  : Colors.black.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.download,
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BusTrackingScreen()),
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardBackground : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
                 color: isDark
-                    ? Colors.white.withOpacity(0.9)
-                    : AppColors.primaryBlue,
-                size: 22,
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.1),
+                width: 1,
               ),
-              const SizedBox(width: 10),
-              Text(
-                'Download Ticket (PDF)',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_on,
                   color: isDark
                       ? Colors.white.withOpacity(0.9)
                       : AppColors.primaryBlue,
+                  size: 22,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Text(
+                  'Track Bus',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.9)
+                        : AppColors.primaryBlue,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _generateAndDownloadPdf(BuildContext context) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Center(
+            child: pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              children: [
+                pw.Text("OTUBUS Ticket", style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 40),
+                pw.Text("Passenger: Student", style: const pw.TextStyle(fontSize: 24)),
+                pw.SizedBox(height: 10),
+                pw.Text("Route: Downtown -> OTU", style: const pw.TextStyle(fontSize: 24)),
+                pw.SizedBox(height: 10),
+                pw.Text("Seat: Row 3, B", style: const pw.TextStyle(fontSize: 24)),
+                pw.SizedBox(height: 10),
+                pw.Text("Date: Oct 21, 2026 08:30 AM", style: const pw.TextStyle(fontSize: 24)),
+                pw.SizedBox(height: 40),
+                pw.BarcodeWidget(
+                  data: 'TXN-9920-OTU-881',
+                  barcode: pw.Barcode.qrCode(),
+                  width: 200,
+                  height: 200,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    final bytes = await pdf.save();
+    await Printing.sharePdf(bytes: bytes, filename: 'ticket.pdf');
   }
 
   Widget _buildInstructions(bool isDark) {
@@ -707,70 +719,6 @@ class DigitalTicketScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF12122A) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.1),
-            width: 1,
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home_outlined, 'Home', false, isDark),
-            _buildNavItem(Icons.search, 'Search', false, isDark),
-            _buildNavItem(
-              Icons.confirmation_num_outlined,
-              'Tickets',
-              true,
-              isDark,
-            ),
-            _buildNavItem(Icons.person_outline, 'Profile', false, isDark),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    IconData icon,
-    String label,
-    bool isSelected,
-    bool isDark,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isSelected
-              ? AppColors.purpleAccent
-              : (isDark ? Colors.white.withOpacity(0.4) : Colors.black45),
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: isSelected
-                ? AppColors.purpleAccent
-                : (isDark ? Colors.white.withOpacity(0.4) : Colors.black45),
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class DashedLinePainter extends CustomPainter {

@@ -130,7 +130,6 @@ class _SelectBoardingAreaScreenState extends State<SelectBoardingAreaScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(theme, isDark),
     );
   }
 
@@ -388,21 +387,4 @@ class _SelectBoardingAreaScreenState extends State<SelectBoardingAreaScreen> {
     );
   }
 
-  Widget _buildBottomNavigationBar(ThemeData theme, bool isDark) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: theme.colorScheme.surface,
-      selectedItemColor: isDark ? theme.colorScheme.secondary : theme.primaryColor,
-      unselectedItemColor: Colors.grey.shade500,
-      currentIndex: 1,
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.directions_bus), label: 'Routes'),
-        BottomNavigationBarItem(icon: Icon(Icons.confirmation_num_outlined), label: 'Tickets'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
-    );
-  }
 }

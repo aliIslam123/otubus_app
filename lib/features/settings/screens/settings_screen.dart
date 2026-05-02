@@ -1,58 +1,8 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const OtubusSettingsDemo());
-}
-
-class OtubusSettingsDemo extends StatelessWidget {
-  const OtubusSettingsDemo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
-
-      // ---------------- LIGHT THEME ----------------
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F8),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFF000080),
-              brightness: Brightness.light,
-            ).copyWith(
-              primary: const Color(0xFF000080),
-              secondary: const Color(0xFFC5A059),
-              surface: Colors.white,
-              background: const Color(0xFFF5F5F8),
-              onBackground: const Color(0xFF0F172A),
-            ),
-      ),
-
-      // ---------------- DARK THEME ----------------
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F0F23),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFF3B3BDF),
-              brightness: Brightness.dark,
-            ).copyWith(
-              primary: const Color(0xFF3B3BDF),
-              secondary: const Color(0xFFC5A059),
-              surface: const Color(0xFF1E1E32),
-              background: const Color(0xFF0F0F23),
-              onBackground: const Color(0xFFF1F5F9),
-            ),
-      ),
-
-      home: const SettingsScreen(),
-    );
-  }
-}
+import 'package:provider/provider.dart';
+import 'package:otubus_app/core/providers/theme_provider.dart';
+import 'package:otubus_app/core/providers/session_provider.dart';
+import 'package:otubus_app/features/auth/screens/get_started_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -64,7 +14,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String selectedLanguage = "English";
 
-  bool darkModeUI = false; // UI فقط (مش مربوط بالThemeMode هنا)
   bool enableNotifications = true;
   bool tripAlerts = true;
   bool promotions = false;
@@ -75,18 +24,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colors.background,
+      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.background,
+        backgroundColor: colors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: colors.onBackground),
+          icon: Icon(Icons.arrow_back_ios, color: colors.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Settings",
           style: TextStyle(
-            color: colors.onBackground,
+            color: colors.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -98,6 +47,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _sectionTitle("ACCOUNT"),
+            _sectionCard(
+              context,
+              children: [
+                _settingTile(
+                  context,
+                  icon: Icons.person_outline,
+                  title: "Edit Profile",
+                  onTap: () => _showEditProfileDialog(),
+                ),
+                _divider(isDark),
+                _settingTile(
+                  context,
+                  icon: Icons.lock_outline,
+                  title: "Change Password",
+                  onTap: () => _showChangePasswordDialog(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
             _sectionTitle("PREFERENCES"),
             _sectionCard(
               context,
@@ -107,16 +78,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.language,
                   title: "Language",
                   trailingText: selectedLanguage,
-                  onTap: () => _showLanguageDialog(context),
+                  onTap: () => _showLanguageDialog(),
                 ),
                 _divider(isDark),
-                _switchTile(
-                  context,
-                  icon: Icons.dark_mode_outlined,
-                  title: "Dark Mode",
-                  value: darkModeUI,
-                  onChanged: (val) {
-                    setState(() => darkModeUI = val);
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) {
+                    return _switchTile(
+                      context,
+                      icon: Icons.dark_mode_outlined,
+                      title: "Dark Mode",
+                      value: themeProvider.isDarkMode,
+                      onChanged: (val) => themeProvider.toggleTheme(),
+                    );
                   },
                 ),
               ],
@@ -133,9 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.notifications_active_outlined,
                   title: "Enable Notifications",
                   value: enableNotifications,
-                  onChanged: (val) {
-                    setState(() => enableNotifications = val);
-                  },
+                  onChanged: (val) => setState(() => enableNotifications = val),
                 ),
                 _divider(isDark),
                 _switchTile(
@@ -144,9 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: "Trip Alerts",
                   subtitle: "Bus arrival reminders",
                   value: tripAlerts,
-                  onChanged: (val) {
-                    setState(() => tripAlerts = val);
-                  },
+                  onChanged: (val) => setState(() => tripAlerts = val),
                 ),
                 _divider(isDark),
                 _switchTile(
@@ -155,39 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: "Promotions",
                   subtitle: "Offers & discounts",
                   value: promotions,
-                  onChanged: (val) {
-                    setState(() => promotions = val);
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            _sectionTitle("SUPPORT"),
-            _sectionCard(
-              context,
-              children: [
-                _settingTile(
-                  context,
-                  icon: Icons.help_outline,
-                  title: "Help Center",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Help Center Placeholder")),
-                    );
-                  },
-                ),
-                _divider(isDark),
-                _settingTile(
-                  context,
-                  icon: Icons.mail_outline,
-                  title: "Contact Us",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Contact Us Placeholder")),
-                    );
-                  },
+                  onChanged: (val) => setState(() => promotions = val),
                 ),
               ],
             ),
@@ -202,22 +139,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context,
                   icon: Icons.description_outlined,
                   title: "Terms & Conditions",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Terms Placeholder")),
-                    );
-                  },
+                  onTap: () {},
                 ),
                 _divider(isDark),
                 _settingTile(
                   context,
                   icon: Icons.privacy_tip_outlined,
                   title: "Privacy Policy",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Privacy Placeholder")),
-                    );
-                  },
+                  onTap: () {},
                 ),
                 _divider(isDark),
                 Padding(
@@ -226,22 +155,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     vertical: 14,
                   ),
                   child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: colors.primary),
-                      const SizedBox(width: 12),
+                    children: const [
+                      Icon(Icons.info_outline, color: Colors.blue),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           "App Version",
-                          style: TextStyle(
-                            color: colors.onBackground,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                      const Text(
-                        "v1.0.0",
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                      Text("v1.0.0"),
                     ],
                   ),
                 ),
@@ -250,51 +173,250 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 25),
 
-            // Logout Button
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Logout Placeholder")),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () async {
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Logout"),
+                      content: const Text("Are you sure?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("Logout"),
+                        ),
+                      ],
+                    ),
                   );
+
+                  if (shouldLogout == true) {
+                    final sessionProvider = context.read<SessionProvider>();
+                    await sessionProvider.logout();
+
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SplashScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  }
                 },
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                child: const Text("Logout"),
               ),
             ),
-
-            const SizedBox(height: 18),
-
-            const Center(
-              child: Text(
-                "OTUBUS • SETTINGS",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ),
-
-            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
 
-  // ---------------- LANGUAGE DIALOG ----------------
-  void _showLanguageDialog(BuildContext context) {
+  // =========================================================
+  // 🔥 EDIT PROFILE
+  // =========================================================
+  void _showEditProfileDialog() {
+    final colors = Theme.of(context).colorScheme;
+
+    final nameController = TextEditingController(text: "Student");
+    final emailController = TextEditingController(text: "email@university.edu");
+
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(25),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Edit Profile",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: nameController,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? "Required" : null,
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      TextFormField(controller: emailController),
+
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+
+                                  setState(() => isLoading = true);
+                                  await Future.delayed(
+                                    const Duration(seconds: 1),
+                                  );
+
+                                  if (!mounted) return;
+
+                                  setState(() => isLoading = false);
+                                  Navigator.pop(context);
+                                },
+                          child: const Text("Save"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // =========================================================
+  // 🔥 CHANGE PASSWORD
+  // =========================================================
+  void _showChangePasswordDialog() {
+    final colors = Theme.of(context).colorScheme;
+
+    final current = TextEditingController();
+    final newPass = TextEditingController();
+    final confirm = TextEditingController();
+
+    final formKey = GlobalKey<FormState>();
+
+    bool obscure1 = true;
+    bool obscure2 = true;
+    bool obscure3 = true;
+    bool isLoading = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(25),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Change Password",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+
+                      TextFormField(
+                        controller: current,
+                        obscureText: obscure1,
+                        decoration: InputDecoration(
+                          labelText: "Current Password",
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscure1
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () =>
+                                setState(() => obscure1 = !obscure1),
+                          ),
+                        ),
+                      ),
+
+                      TextFormField(
+                        controller: newPass,
+                        obscureText: obscure2,
+                        validator: (v) =>
+                            v != null && v.length < 6 ? "Too short" : null,
+                      ),
+
+                      TextFormField(
+                        controller: confirm,
+                        obscureText: obscure3,
+                        validator: (v) => v != newPass.text ? "Mismatch" : null,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                if (!formKey.currentState!.validate()) return;
+
+                                setState(() => isLoading = true);
+                                await Future.delayed(
+                                  const Duration(seconds: 1),
+                                );
+
+                                if (!mounted) return;
+
+                                setState(() => isLoading = false);
+                                Navigator.pop(context);
+                              },
+                        child: const Text("Save"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // =========================================================
+  // 🔥 LANGUAGE FIX (ERROR SOLVED)
+  // =========================================================
+  void _showLanguageDialog() {
     final colors = Theme.of(context).colorScheme;
 
     showDialog(
@@ -302,13 +424,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) {
         return AlertDialog(
           backgroundColor: colors.surface,
-          title: Text(
-            "Choose Language",
-            style: TextStyle(
-              color: colors.onBackground,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          title: const Text("Choose Language"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [_languageOption("English"), _languageOption("Arabic")],
@@ -327,109 +443,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() => selectedLanguage = lang);
         Navigator.pop(context);
       },
-      title: Text(
-        lang,
-        style: TextStyle(
-          color: colors.onBackground,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      title: Text(lang),
       trailing: isSelected
           ? Icon(Icons.check_circle, color: colors.primary)
-          : const Icon(Icons.circle_outlined, color: Colors.grey),
+          : const Icon(Icons.circle_outlined),
     );
   }
 
-  // ---------------- UI HELPERS ----------------
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 6, bottom: 10),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.grey,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
+  // =========================================================
+  // UI HELPERS
+  // =========================================================
+  Widget _sectionTitle(String title) => Padding(
+    padding: const EdgeInsets.only(left: 6, bottom: 10),
+    child: Text(title),
+  );
 
-  Widget _sectionCard(BuildContext context, {required List<Widget> children}) {
-    final colors = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _sectionCard(BuildContext context, {required List<Widget> children}) =>
+      Container(child: Column(children: children));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.grey.shade200,
-        ),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 16,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-      ),
-      child: Column(children: children),
-    );
-  }
-
-  Widget _divider(bool isDark) {
-    return Divider(
-      height: 0,
-      thickness: 1,
-      color: isDark ? Colors.white10 : Colors.grey.shade200,
-    );
-  }
+  Widget _divider(bool isDark) =>
+      Divider(height: 0, color: isDark ? Colors.white10 : Colors.grey);
 
   Widget _settingTile(
     BuildContext context, {
     required IconData icon,
     required String title,
-    String? subtitle,
     String? trailingText,
     required VoidCallback onTap,
-    bool disabled = false,
   }) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Opacity(
-      opacity: disabled ? 0.5 : 1,
-      child: ListTile(
-        onTap: disabled ? null : onTap,
-        leading: CircleAvatar(
-          radius: 18,
-          backgroundColor: colors.primary.withOpacity(0.12),
-          child: Icon(icon, color: colors.primary, size: 20),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: colors.onBackground,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: subtitle != null
-            ? Text(subtitle, style: const TextStyle(color: Colors.grey))
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (trailingText != null)
-              Text(trailingText, style: const TextStyle(color: Colors.grey)),
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
+    return ListTile(leading: Icon(icon), title: Text(title), onTap: onTap);
   }
 
   Widget _switchTile(
@@ -440,37 +482,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool value,
     required Function(bool) onChanged,
   }) {
-    final colors = Theme.of(context).colorScheme;
-
     return SwitchListTile(
       value: value,
       onChanged: onChanged,
-      activeColor: colors.primary,
-      title: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: colors.primary.withOpacity(0.12),
-            child: Icon(icon, color: colors.primary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: colors.onBackground,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-      subtitle: subtitle != null
-          ? Padding(
-              padding: const EdgeInsets.only(left: 48),
-              child: Text(subtitle, style: const TextStyle(color: Colors.grey)),
-            )
-          : null,
+      title: Text(title),
     );
   }
 }

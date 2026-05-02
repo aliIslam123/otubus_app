@@ -1,59 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const OtubusApp());
-}
-
-class OtubusApp extends StatelessWidget {
-  const OtubusApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'OTUBUS',
-      themeMode: ThemeMode.system, // ✅ Auto switch حسب الجهاز
-      // ---------------- LIGHT THEME ----------------
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F8),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFF000080),
-              brightness: Brightness.light,
-            ).copyWith(
-              primary: const Color(0xFF000080),
-              secondary: const Color(0xFFC5A059),
-              background: const Color(0xFFF5F5F8),
-              surface: Colors.white,
-              onBackground: const Color(0xFF000000),
-            ),
-      ),
-
-      // ---------------- DARK THEME ----------------
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121218),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFF3D5AFE),
-              brightness: Brightness.dark,
-            ).copyWith(
-              primary: const Color(0xFF3D5AFE),
-              secondary: const Color(0xFFC5A059),
-              background: const Color(0xFF121218),
-              surface: const Color(0xFF1E1E2D),
-              onBackground: Colors.white,
-            ),
-      ),
-
-      home: const SplashScreen(),
-    );
-  }
-}
+import 'package:otubus_app/features/auth/screens/login_screen.dart';
+import 'package:otubus_app/features/auth/screens/signup_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -241,11 +189,19 @@ class _ActionCard extends StatelessWidget {
           const SizedBox(height: 12),
           const _LoginButton(),
           const SizedBox(height: 14),
-          Text(
-            'New to OTUBUS? Create Acc...',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : colors.primary,
-              fontWeight: FontWeight.w600,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SignUpScreen()),
+              );
+            },
+            child: Text(
+              'New to OTUBUS? Create Acc...',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : colors.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -266,7 +222,7 @@ class _PrimaryButton extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const SignUpScreen()),
         );
       },
       child: Container(
@@ -328,25 +284,6 @@ class _LoginButton extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Center(
-        child: Text(
-          'Login Screen (Placeholder)',
-          style: TextStyle(color: colors.onBackground),
         ),
       ),
     );

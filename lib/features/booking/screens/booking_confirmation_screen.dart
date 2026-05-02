@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'digital_ticket_screen.dart'; // تأكد إن ده مسار الملف الصح عندك
+import '../../../main_screen.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
   final double price;
@@ -290,7 +291,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const SearchResultsScreen(),
+                        pageBuilder: (context, animation, secondaryAnimation) => const MainScreen(),
                         transitionsBuilder: (context, animation, secondaryAnimation, child) {
                           return FadeTransition(opacity: animation, child: child);
                         },
@@ -324,18 +325,4 @@ class BookingConfirmationScreen extends StatelessWidget {
       ],
     );
   }
-}
-
-// ==========================================
-// كلاس مؤقت (استبدله بكود صفحة السيرش بتاعك)
-// ==========================================
-class SearchResultsScreen extends StatelessWidget {
-  const SearchResultsScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Search Results')),
-      body: const Center(child: Text('رجعت لصفحة البحث بنجاح!', style: TextStyle(fontSize: 20))),
-    );
-  }
-}
+}

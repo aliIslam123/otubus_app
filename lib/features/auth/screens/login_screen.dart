@@ -1,59 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const OtubusApp());
-}
-
-class OtubusApp extends StatelessWidget {
-  const OtubusApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "OTUBUS",
-      themeMode: ThemeMode.system, // ✅ Auto switch حسب الجهاز
-      // ---------------- LIGHT THEME ----------------
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF8F9FE),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFF000080),
-              brightness: Brightness.light,
-            ).copyWith(
-              primary: const Color(0xFF000080),
-              secondary: const Color(0xFFD4AF37),
-              background: const Color(0xFFF8F9FE),
-              surface: Colors.white,
-              onBackground: const Color(0xFF2E3A59),
-            ),
-      ),
-
-      // ---------------- DARK THEME ----------------
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F1219),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFF5E7BFF),
-              brightness: Brightness.dark,
-            ).copyWith(
-              primary: const Color(0xFF5E7BFF),
-              secondary: const Color(0xFFE5B97F),
-              background: const Color(0xFF0F1219),
-              surface: const Color(0xFF1C1C1E),
-              onBackground: Colors.white,
-            ),
-      ),
-
-      home: const LoginScreen(),
-    );
-  }
-}
+import 'package:otubus_app/main_screen.dart';
+import 'package:otubus_app/features/auth/screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -184,7 +133,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainScreen()),
+                        (route) => false,
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.primary,
                       shape: RoundedRectangleBorder(
@@ -291,7 +246,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SignUpScreen(),
+                          ),
+                        );
+                      },
                       child: Text(
                         "Sign up",
                         style: TextStyle(

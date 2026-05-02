@@ -390,7 +390,6 @@ class _StudentInformationScreenState extends State<StudentInformationScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(isDark, isDark ? Colors.white : primaryBlue),
     );
   }
 
@@ -716,22 +715,4 @@ class _StudentInformationScreenState extends State<StudentInformationScreen> {
     );
   }
 
-  Widget _buildBottomNavigationBar(bool isDark, Color activeColor) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: isDark ? const Color(0xFF0C0E17) : Colors.white,
-      selectedItemColor: activeColor,
-      unselectedItemColor: const Color(0xFF6B7280),
-      currentIndex: 1,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.confirmation_num_outlined), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.circle, size: 8), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.notifications_none_outlined), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-      ],
-    );
-  }
 }
